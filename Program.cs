@@ -13,9 +13,9 @@ namespace Risc_16 {
 
             var vm = new Risc16Vm(null,() => {
                 instructions ++;
-                s.Stop();
-                renderer.Render();
-                s.Start();
+                // s.Stop();
+                // renderer.Render();
+                // s.Start();
 
                 //System.Console.ReadKey();
             });

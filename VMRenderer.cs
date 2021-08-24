@@ -8,6 +8,8 @@ namespace Risc_16 {
 
         public VMRenderer(IVirtualMachine vm) {
             Console.CursorVisible = false;
+            Console.SetWindowPosition(0,0);
+            Console.SetWindowSize(Console.LargestWindowWidth,Console.LargestWindowHeight);
             _vm = vm;
         }
 
@@ -21,7 +23,7 @@ namespace Risc_16 {
             Console.SetCursorPosition(col, row);
 
             for(int r = 0; r < _vm.Registers.Length; r++) {
-                Write(col, row +r, $"R[{r}]: {_vm.Registers[r]}");
+                Write(col, row +r, $"R[{r}]: {_vm.Registers[r].ToBits().Render()} {_vm.Registers[r]} ");
             }
         }
 
@@ -29,23 +31,37 @@ namespace Risc_16 {
         {
             Console.SetCursorPosition(col, row);
             var rowt = row;
-            col = col - 16;
+            col = col - 32;
             for(int address = 0; address < _vm.Memory.Length; address++) {
 
-                if ((address % 32) == 0) {
-                    col = col + 16;
+                if ((address % 48) == 0) {
+                    col = col + 32;
                     rowt = row;
                 }
                 rowt += 1;
-                Write(col, rowt, $"[{address:000}] {_vm.Memory[address]:000000}");
+
+                if (_vm.Memory[address] == 0) {
+                    Console.ForegroundColor = ConsoleColor.Gray;
+                }
+
+                if(address == _vm.ProgramCounter) {
+                    Console.BackgroundColor = ConsoleColor.Red;
+                }
+
+                Write(col, rowt, $"[{address:000}] {_vm.Memory[address].ToBits().Render()} {_vm.Memory[address]:000000}");
+
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.BackgroundColor = ConsoleColor.Black;
+
             }
         }
         
         public void Render() {
-            Write(0, 0, $"_pc   : {_vm.ProgramCounter}");
-            Write(0, 1, $"INS  : {_vm.CurrentInstruction}");
-            Output_register(0, 3);
-            Output_memory(25, 0);
+            Write(0, 0, $"PC   : {_vm.ProgramCounter}");
+            Write(0, 1, $"{_vm.CurrentInstruction}");
+            Write(0,3, $"{_vm.OpCodes[_vm.CurrentInstruction.opCode]}    ");
+            Output_register(0, 4);
+            Output_memory(48, 0);
          }
     }
 }

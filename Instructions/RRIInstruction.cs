@@ -8,13 +8,12 @@ namespace Risc_16
 
         public RRIInstruction(int opCode, BitArray data) : base(opCode, data)
         {
-            regB = data.GetBitsAs<int>(6, 3);
-            Immediate = data.GetBitsAs<int>(9, 7);
+            regB = data.GetBitsAs<ushort>(6, 3);
+            Immediate = data.GetBitsAs<short>(9, 7);
         }
 
-        public int regB { get; set; }
-        public int Immediate { get; set; }
-
-        public override string ToString() => $"{opCode} {regA} {regB} {Immediate}";
+        public ushort regB { get; set; }
+        public short Immediate { get; set; }
+        public override string ToString() => $"OpCode\tRegA\tRegB\tImm              \n {opCode}\t{regA}\t{regB}\t{Immediate}                            ";
     }
 }

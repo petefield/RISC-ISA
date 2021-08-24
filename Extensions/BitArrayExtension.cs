@@ -6,6 +6,31 @@ using System.Linq;
 namespace Risc_16 {
     public static class BitArrayExtension{
 
+        public static BitArray ToBits(this ushort i) {
+           BitArray b = new BitArray(new int[] { i });
+           return b.GetBits(16,16);
+        }
+
+        public static string Render(this BitArray b) {
+            var array = new bool[b.Length];
+            b.CopyTo(array,0);
+            return new string(array.Select(x => x ? '1' : '0').ToArray());
+        }
+
+        
+        public static void Reverse(this BitArray array)
+        {
+            int length = array.Length;
+            int mid = (length / 2);
+
+            for (int i = 0; i < mid; i++)
+            {
+                bool bit = array[i];
+                array[i] = array[length - i - 1];
+                array[length - i - 1] = bit;
+            }    
+        }
+
         public static BitArray Nand(this BitArray a, BitArray b) {
 
             var r = new BitArray(16);
@@ -13,7 +38,8 @@ namespace Risc_16 {
             for(int i = 0; i < a.Length; i++) {
                 r[i] = !(a[i] & b[i]);
             }
-             return r;
+            r.Reverse();
+            return r;
         }
 
         public static TResult GetBitsAs<TResult>(this BitArray bits, int start, int count)
@@ -31,9 +57,9 @@ namespace Risc_16 {
 
         private static TResult  getFromBitArray<TResult>(this BitArray bitArray)
         {
-            TResult[] array = new TResult[1];
+            int[] array = new int[1];
             bitArray.CopyTo(array, 0);
-            return array[0];
+            return (TResult)Convert.ChangeType(array[0], typeof(TResult));
         }
 }
 }

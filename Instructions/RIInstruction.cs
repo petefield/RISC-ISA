@@ -7,9 +7,9 @@ namespace Risc_16 {
         public RIInstruction(int opCode, BitArray data) :base(opCode, data){
             Immediate = data.GetBitsAs<ushort>(6, 10);
         }
-        public int Immediate { get; set; }
+        public ushort Immediate { get; set; }
 
-        public override string ToString() => $"{opCode} {regA} {Immediate}";
+        public override string ToString() => $"OpCode\tRegA\tImm                            \n {opCode}\t{regA}\t{Immediate}                            ";
 
     }
 }

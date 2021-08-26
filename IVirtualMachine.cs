@@ -9,6 +9,8 @@ namespace Risc_16 {
         public ushort[] Memory { get; }
         public Instruction CurrentInstruction { get; }
         Dictionary<int, string> OpCodes { get; }
-        public int Run(ushort[] data);
+        public int Run();
+        public void Load(ushort[] data);
+
     }
 }

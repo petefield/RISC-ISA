@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Risc-16": {
+      "commandName": "Project",
+      "commandLineArgs": "countdown.txt --debug"
+    }
+  }
+}

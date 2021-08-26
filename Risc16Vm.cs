@@ -100,7 +100,7 @@ namespace Risc_16 {
                     break;
                 case 3: //LUI
                     Exec<RIInstruction>(_instruction, i => {
-                          var b = i.Immediate.ToBits();
+                        var b = i.Immediate.ToBits();
                         b.Reverse();
                         _register[i.regA] = b.GetBitsAs<ushort>(6,16);
                          _pc += 1;
@@ -115,15 +115,19 @@ namespace Risc_16 {
                 case 5: //LW
                     Exec<RRIInstruction>(_instruction, i => {
                         _register[i.regA] = _memory[i.regB + i.Immediate]; 
-                        _pc += 1;
+                        _pc++;
                     });
                     break;
                 case 6: //BEQ
                     Exec<RRIInstruction>(_instruction, i =>{
                         if(_register[i.regA] == _register[i.regB]) {
-                            _pc = (ushort)(_pc + i.Immediate);
+                            _pc = (ushort)(i.Immediate);
                         }
-                        _pc += 1;
+                        else
+                        {
+                            _pc++;
+                        }
+
                     });
                     break;
                 case 7: //JALR
@@ -140,9 +144,11 @@ namespace Risc_16 {
             }
          }
 
-        public int Run(ushort[] data)
+        public void Load(ushort[] data) => data.CopyTo(_memory, 0);
+
+
+        public int Run()
         {
-            data.CopyTo(_memory, 0);
 
             while (true){
                 try {

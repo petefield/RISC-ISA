@@ -6,4 +6,10 @@
     <RootNamespace>Risc_16</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Update="countdown.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

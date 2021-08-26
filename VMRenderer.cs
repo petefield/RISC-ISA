@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 
 namespace Risc_16 {
     
@@ -26,6 +27,8 @@ namespace Risc_16 {
                 Write(col, row +r, $"R[{r}]: {_vm.Registers[r].ToBits().Render()} {_vm.Registers[r]} ");
             }
         }
+        
+        private ushort[] lastMemory = new ushort[255];
 
         private void Output_memory(int col, int row)
         {
@@ -48,18 +51,35 @@ namespace Risc_16 {
                     Console.BackgroundColor = ConsoleColor.Red;
                 }
 
+                if((lastMemory != null) && (lastMemory[address] != _vm.Memory[address])) {
+                    Console.BackgroundColor = ConsoleColor.Green;
+                }
+
                 Write(col, rowt, $"[{address:000}] {_vm.Memory[address].ToBits().Render()} {_vm.Memory[address]:000000}");
 
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.BackgroundColor = ConsoleColor.Black;
 
+
+                //_vm.Memory.CopyTo(lastMemory,0);
             }
+
+            for(int i = 0; i < _vm.Memory.Length; i++) {
+                lastMemory[i] = _vm.Memory[i];
+            }
+
+            lastMemory = _vm.Memory.ToArray();
+
         }
         
         public void Render() {
             Write(0, 0, $"PC   : {_vm.ProgramCounter}");
             Write(0, 1, $"{_vm.CurrentInstruction}");
-            Write(0,3, $"{_vm.OpCodes[_vm.CurrentInstruction.opCode]}    ");
+            if (_vm.CurrentInstruction != null)
+            {
+                Write(0, 3, $"{_vm.OpCodes[_vm.CurrentInstruction.opCode]}    ");
+            }
+
             Output_register(0, 4);
             Output_memory(48, 0);
          }

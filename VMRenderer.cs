@@ -35,6 +35,10 @@ namespace Risc_16 {
             Console.SetCursorPosition(col, row);
             var rowt = row;
             col = col - 32;
+
+            var bck = Console.BackgroundColor;
+            var fore = Console.ForegroundColor;
+
             for(int address = 0; address < _vm.Memory.Length; address++) {
 
                 if ((address % 48) == 0) {
@@ -43,30 +47,21 @@ namespace Risc_16 {
                 }
                 rowt += 1;
 
-                if (_vm.Memory[address] == 0) {
-                    Console.ForegroundColor = ConsoleColor.Gray;
-                }
-
                 if(address == _vm.ProgramCounter) {
                     Console.BackgroundColor = ConsoleColor.Red;
                 }
 
                 if((lastMemory != null) && (lastMemory[address] != _vm.Memory[address])) {
-                    Console.BackgroundColor = ConsoleColor.Green;
+                    Console.BackgroundColor = ConsoleColor.Blue;
                 }
 
                 Write(col, rowt, $"[{address:000}] {_vm.Memory[address].ToBits().Render()} {_vm.Memory[address]:000000}");
 
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.BackgroundColor = ConsoleColor.Black;
+                Console.ForegroundColor = fore;
+                Console.BackgroundColor = bck;
 
-
-                //_vm.Memory.CopyTo(lastMemory,0);
             }
 
-            for(int i = 0; i < _vm.Memory.Length; i++) {
-                lastMemory[i] = _vm.Memory[i];
-            }
 
             lastMemory = _vm.Memory.ToArray();
 

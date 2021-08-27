@@ -28,6 +28,7 @@ namespace Risc_16 {
             if (!_debug) return;
             _stopWatch.Stop();
             _renderer.Render();
+             Console.ReadKey();
             _stopWatch.Start();
         }
 
@@ -49,22 +50,26 @@ namespace Risc_16 {
             _renderer = new VMRenderer(vm);
 
             vm.Load(ReadData());
-            if (_debug) _renderer.Render();
+            if (_debug){
+                Console.Clear();
+                _renderer.Render();
+            }
 
             _stopWatch.Start();
             var returnCode = vm.Run();
             _stopWatch.Stop();
 
-            if (_debug) ShowPerformanceStats();
+
+            ShowPerformanceStats();
             return returnCode;
         }
 
         private static void ShowPerformanceStats()
         {
-            var duration = _stopWatch.ElapsedMilliseconds;
+            var duration = _stopWatch.ElapsedMilliseconds /1000d;
             Console.WriteLine($"Duration : {duration} s");
             Console.WriteLine($"Instructions : {_instructionsExecuted} ");
-            Console.WriteLine($"Speed : {(_instructionsExecuted / duration):#,##0.00} I/mS");
+            Console.WriteLine($"Speed : {(_instructionsExecuted / duration):#,##0.00} Instructions Per Second");
         }
     }
 }

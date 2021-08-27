@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Assembler": {
+      "commandName": "Project",
+      "commandLineArgs": "./countdown.txt"
+    }
+  }
+}

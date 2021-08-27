@@ -7,6 +7,12 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="Assembler\**" />
+    <EmbeddedResource Remove="Assembler\**" />
+    <None Remove="Assembler\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="countdown.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

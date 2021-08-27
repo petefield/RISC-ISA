@@ -1,15 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net5.0</TargetFramework>
-    <RootNamespace>Risc_16</RootNamespace>
+    <RootNamespace>Risc16</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
     <Compile Remove="Assembler\**" />
     <EmbeddedResource Remove="Assembler\**" />
     <None Remove="Assembler\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\VirtualMachineBase\VirtualMachineBase.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections;
-
 using System.Linq;
 
-namespace Risc_16 {
+namespace VirtualMachineBase.BinaryUtilities {
     public static class BitArrayExtension{
 
         public static BitArray ToBits(this ushort i) {
@@ -46,7 +45,7 @@ namespace Risc_16 {
         {
             var data = bits.Cast<bool>().Reverse();
             BitArray opcode = new BitArray(data.Skip(start).Take(count).Reverse().ToArray());
-            return opcode.getFromBitArray<TResult>();
+            return opcode.GetFromBitArray<TResult>();
         }
 
         public static BitArray GetBits(this BitArray bits, int start, int count)
@@ -55,9 +54,9 @@ namespace Risc_16 {
             return b;
         }
 
-        private static TResult  getFromBitArray<TResult>(this BitArray bitArray)
+        private static TResult GetFromBitArray<TResult>(this BitArray bitArray)
         {
-            int[] array = new int[1];
+            var array = new int[1];
             bitArray.CopyTo(array, 0);
             return (TResult)Convert.ChangeType(array[0], typeof(TResult));
         }

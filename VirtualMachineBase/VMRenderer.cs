@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Linq;
+using VirtualMachineBase.BinaryUtilities;
 
-namespace Risc_16 {
-    
-    class VMRenderer {
+namespace VirtualMachineBase {
+    public class VmRenderer {
 
         private readonly IVirtualMachine _vm;
-
-        public VMRenderer(IVirtualMachine vm) {
+        
+        public VmRenderer(IVirtualMachine vm) {
             Console.CursorVisible = false;
             Console.SetWindowPosition(0,0);
             Console.SetWindowSize(Console.LargestWindowWidth,Console.LargestWindowHeight);
@@ -28,7 +28,7 @@ namespace Risc_16 {
             }
         }
         
-        private ushort[] lastMemory = new ushort[255];
+        private ushort[] _lastMemory = new ushort[255];
 
         private void Output_memory(int col, int row)
         {
@@ -51,7 +51,7 @@ namespace Risc_16 {
                     Console.BackgroundColor = ConsoleColor.Red;
                 }
 
-                if((lastMemory != null) && (lastMemory[address] != _vm.Memory[address])) {
+                if((_lastMemory != null) && (_lastMemory[address] != _vm.Memory[address])) {
                     Console.BackgroundColor = ConsoleColor.Blue;
                 }
 
@@ -62,9 +62,7 @@ namespace Risc_16 {
 
             }
 
-
-            lastMemory = _vm.Memory.ToArray();
-
+            _lastMemory = _vm.Memory.ToArray();
         }
         
         public void Render() {
@@ -72,7 +70,7 @@ namespace Risc_16 {
             Write(0, 1, $"{_vm.CurrentInstruction}");
             if (_vm.CurrentInstruction != null)
             {
-                Write(0, 3, $"{_vm.OpCodes[_vm.CurrentInstruction.opCode]}    ");
+                Write(0, 3, $"{_vm.OpCodes[_vm.CurrentInstruction.OpCode]}    ");
             }
 
             Output_register(0, 4);

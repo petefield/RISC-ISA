@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Linq;
 using VirtualMachineBase.BinaryUtilities;
 
@@ -6,12 +7,15 @@ namespace VirtualMachineBase {
     public class VmRenderer {
 
         private readonly IVirtualMachine _vm;
-        
+        private byte[] _lastMemory;
+
         public VmRenderer(IVirtualMachine vm) {
             Console.CursorVisible = false;
             Console.SetWindowPosition(0,0);
             Console.SetWindowSize(Console.LargestWindowWidth,Console.LargestWindowHeight);
             _vm = vm;
+            _lastMemory = new Byte[_vm.Memory.GetUpperBound(0)];
+
         }
 
         private void Write(int col, int row, object obj) {
@@ -24,57 +28,53 @@ namespace VirtualMachineBase {
             Console.SetCursorPosition(col, row);
 
             for(int r = 0; r < _vm.Registers.Length; r++) {
-                Write(col, row +r, $"R[{r}]: {_vm.Registers[r].ToBits().Render()} {_vm.Registers[r]} ");
+                Write(col, row +r, $"R[{r}]: {_vm.Registers[r]}");
             }
         }
-        
-        private ushort[] _lastMemory = new ushort[255];
 
-        private void Output_memory(int col, int row)
+        private void Output_memory_words(int col, int row)
         {
             Console.SetCursorPosition(col, row);
             var rowt = row;
-            col = col - 32;
-
             var bck = Console.BackgroundColor;
             var fore = Console.ForegroundColor;
 
-            for(int address = 0; address < _vm.Memory.Length; address++) {
+            var byteCount = _vm.Memory.GetUpperBound(0);
 
-                if ((address % 48) == 0) {
-                    col = col + 32;
-                    rowt = row;
-                }
-                rowt += 1;
+            for(int address = 0; address <= byteCount; address+=4) {
 
-                if(address == _vm.ProgramCounter) {
-                    Console.BackgroundColor = ConsoleColor.Red;
+                if (address == _vm.ProgramCounter) {
+                    Console.BackgroundColor = ConsoleColor.Green;
                 }
 
-                if((_lastMemory != null) && (_lastMemory[address] != _vm.Memory[address])) {
-                    Console.BackgroundColor = ConsoleColor.Blue;
-                }
+                var word = _vm.Memory[address..(address + 4)];
 
-                Write(col, rowt, $"[{address:000}] {_vm.Memory[address].ToBits().Render()} {_vm.Memory[address]:000000}");
+                Write(col, rowt++, $"[{address:000}] {word.Render()} {ValueConvertor.ToUInt(word):0000}");
+
+                if (address == 128)
+                {
+                    rowt = 0;
+                    col += 64;
+                }
 
                 Console.ForegroundColor = fore;
                 Console.BackgroundColor = bck;
-
             }
 
             _lastMemory = _vm.Memory.ToArray();
         }
-        
+
+
         public void Render() {
             Write(0, 0, $"PC   : {_vm.ProgramCounter}");
             Write(0, 1, $"{_vm.CurrentInstruction}");
             if (_vm.CurrentInstruction != null)
             {
-                Write(0, 3, $"{_vm.OpCodes[_vm.CurrentInstruction.OpCode]}    ");
+                Write(0, 3, $"{_vm.OperationCodeDescription(_vm.CurrentInstruction.OpCode)}    ");
             }
 
             Output_register(0, 4);
-            Output_memory(48, 0);
+            Output_memory_words(64, 0);
          }
     }
 }

@@ -6,6 +6,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\VirtualMachineBase\VirtualMachineBase.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Update="countdown.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

@@ -14,12 +14,13 @@ namespace Runner {
         private static int _instructionsExecuted;
         private static string _filePath;
 
-        private static void Render()
+        private static void Render(string message)
         {
             _instructionsExecuted++;
             if (!_debug) return;
             StopWatch.Stop();
             _renderer.Render();
+            Console.WriteLine(message);
             if(_interactive) Console.ReadKey();
             StopWatch.Start();
         }
@@ -38,14 +39,16 @@ namespace Runner {
         {
             ParseArgs(args);
 
-            var vm = new Risc16.VirtualMachine(null, Render);
+            var vm = new Risc16.VirtualMachine(
+                () => Render("Press any key to execute."),
+                ()=> Render("Press any key to fetch next instruction"));
 
             _renderer = new VmRenderer(vm);
 
             var machineCode = Risc16.Assembler.Assembler.Assemble(_filePath);
 
             vm.Load(machineCode);
-            
+            Render("Data Loaded. Press Any key to run.");
             StopWatch.Start();
             var returnCode = vm.Run();
             StopWatch.Stop();

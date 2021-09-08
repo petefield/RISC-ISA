@@ -4,17 +4,16 @@ using VirtualMachineBase.BinaryUtilities;
 
 namespace Risc16.Instructions
 {
-    public class RrrInstruction : Instruction
+    public class RRR : Instruction
     {
-        public RrrInstruction (int opCode, BitArray data) : base(opCode, data)
+        public int RegB { get; private set; }
+        public int RegC { get; private set; }
+
+        public override string ToString() => $"OpCode\tRegA\tRegB\t0000\tRegC              \n {OpCode:0000}\t{RegA:0000}\t{RegB}\t0\t{RegC:0000}                            ";
+        public override void DecodeInternal(byte[] data)
         {
-            RegB = data.GetBitsAs<int>(6, 3);
-            RegC = data.GetBitsAs<int>(13, 3);
+            RegB = data[1];
+            RegC = data[2];
         }
-
-        public int RegB { get; }
-        public int RegC { get; }
-
-        public override string ToString() => $"OpCode\tRegA\tRegB\t0000\tRegC              \n {OpCode}\t{RegA}\t{RegB}\t0\t{RegC}                            ";
     }
 }

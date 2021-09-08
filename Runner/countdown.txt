@@ -1,12 +1,28 @@
-      LW 3 0 STARTVALUEADDR		#Load data from Memory[32] into reg[1]
-      LW 1 0 DECBYVALUEADDR		#Set reg[1] to 1
-      NAND 4 1 1				#Nand reg[1] and reg[1] store result in reg[4]
-      ADDI 4 4 1				#Add 1 to reg[4] and store in reg[4]
-LOOP: ADD 3 3 4			        #Add reg[4] to reg[3] and store in reg[3]
-      SW 3 0 16					#Store reg[3] into reg[0] mem[16]
-      BEQ 0 3 HALT		        #If reg[3] (result) == reg[0]  goto 9 (PC + 1 + imm)
-      BEQ 0 0 LOOP		        #Jump to 4 (loop)
-HALT: JALR 0 0 1                #HALT
-      STARTVALUEADDR: FILL 8				
-      DECBYVALUEADDR: FILL 1				
-          
+		JMP PROG			#0
+
+START:	FILL 1024			#4
+DECBY:	FILL 32				#8
+
+PROG:	LW 1 0 START		#12	Load data from Memory[32] into reg[1] 
+		LW 2 0 DECBY		#16	Set reg[3] to decrement amount		
+
+LOOP:	PUSH 1				#20,24
+		PUSH 2				#28,32
+
+		LUI 6 SUB			#36
+		JALR 5 6 0			#40
+		POP 1				#44,48
+		
+		BLT 1 0 HALT		#52		If reg[3] (result) <= reg[0] goto 9 (PC + 1 + imm)
+		BEQ 0 0 LOOP		#56		Jump to 4 (loop)
+
+HALT:	HALT				#60		HALT
+
+
+SUB:	POP 3				#64 68
+		POP 4				#72 76
+		NAND 3 3 3			#80		Nand reg[2] and reg[2] store result in reg[2]
+		ADDI 3 3 1			#84		Add 1 to reg[2] and store in reg[2]
+		ADD 3 3 4			#88		Add reg[2] to reg[1] and store in reg[1]
+		PUSH 3				#92 96
+		JALR 0 5 0 			#100	RETURN

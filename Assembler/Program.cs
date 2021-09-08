@@ -39,7 +39,7 @@ namespace Risc16.Assembler
                 }
             }
 
-            if (outputFilePath != null) {
+            if (!string.IsNullOrWhiteSpace(outputFilePath)) {
 
                 if(File.Exists(outputFilePath))
                     File.Delete(outputFilePath);

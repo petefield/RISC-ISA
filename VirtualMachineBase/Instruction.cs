@@ -1,15 +1,22 @@
 ﻿using System.Collections;
+using System.Text;
 using VirtualMachineBase.BinaryUtilities;
 
 namespace VirtualMachineBase
 {
     public abstract class Instruction
     {
-        protected Instruction(int opCode, BitArray data)
+
+        public byte[] raw;
+
+        public void Decode(byte[] data)
         {
-            OpCode = opCode;
-            RegA = data.GetBitsAs<int>(3, 3);
+            raw = data;
+            RegA = data[0];
+            DecodeInternal(data);
         }
+
+        public abstract void DecodeInternal(byte[] data);
 
         public int OpCode { get; set; }
         public int RegA { get; set; }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Risc16.Instructions;
 using VirtualMachineBase;
 using VirtualMachineBase.BinaryUtilities;
@@ -9,141 +10,157 @@ using VirtualMachineBase.BinaryUtilities;
 namespace Risc16 {
     public class VirtualMachine : IVirtualMachine 
     {
-        private readonly ushort[] _register = new ushort[8];
-        private ushort _pc;
+        private int _pc;
+        private readonly byte[] _memory = new byte[256];
+        private readonly Registers _register = new Registers(9);
         private readonly Action? _postDecode;
         private readonly Action? _postExecution;
+        private readonly Dictionary<OpCode, IInstruction> _operations;
+        private IInstruction? _currentInstruction;
 
-        public Dictionary<int, string> OpCodes => new Dictionary<int, string>{ 
-            {0,"ADD" },
-            {1,"ADDI" },
-            {2,"NAND" },
-            {3,"LUI" },
-            {4,"SW" },
-            {5,"LW" },
-            {6,"BEQ" },
-            {7,"JALR" },
+        private enum SysCallCodes{
+           HALT = 1
+        }
+        
+        private static readonly Dictionary<SysCallCodes, Action> SysCalls = new Dictionary<SysCallCodes, Action>{ 
+            {SysCallCodes.HALT, () => throw new InvalidOperationException("HALT")}
         };
+
+        public string OperationCodeDescription(int opcode) 
+            => ((OpCode)opcode).ToString();
+
+
+        public enum OpCode{
+            ADD,     //0
+            ADDI,    //1
+            NAND,    //2
+            LUI,     //3
+            SW,      //4
+            LW,      //5
+            BEQ,     //6
+            JALR,    //7
+            BLT,     //8
+            BGT      //9
+        }
 
         public VirtualMachine(Action? postDecode, Action? postExecution) {
             _postDecode = postDecode;
             _postExecution = postExecution;
-        }
-
-        public ushort ProgramCounter => _pc;
-
-        public ushort[] Registers {
-            get { 
-                _register[0] = 0;
-                return _register;
-            }
-        } 
-
-        public ushort[] Memory { get; } = new ushort[255];
-
-        public Instruction? CurrentInstruction { get; private set; }
-
-        private void Decode(int address) { 
-
-            BitArray instructionData = new BitArray( BitConverter.GetBytes(Memory[address]));
-            var opCode = instructionData.GetBitsAs<int>(0, 3);
-            switch (opCode)
+            _operations = new Dictionary<OpCode, IInstruction>
             {
-                case 0: case 2:
-                    CurrentInstruction = new RrrInstruction(opCode,instructionData);
-                    break;
-                case 3:
-                    CurrentInstruction = new RiInstruction(opCode,instructionData);
-                    break;
-                case 1: case 4: case 5: case 6: case 7:
-                    CurrentInstruction = new RriInstruction(opCode,instructionData);
-                    break;
-                default:
-                    throw new Exception();
-            }
+                {OpCode.ADD,  new Instruction<RRR>(OpCode.ADD,  ADD)} ,
+                {OpCode.ADDI, new Instruction<RRI>(OpCode.ADDI, ADDI)},
+                {OpCode.NAND, new Instruction<RRR>(OpCode.NAND, NAND)},
+                {OpCode.LUI,  new Instruction<RI> (OpCode.LUI,  LUI)},
+                {OpCode.SW,   new Instruction<RRI>(OpCode.SW,   SW)},
+                {OpCode.LW,   new Instruction<RRI>(OpCode.LW,   LW)},
+                {OpCode.BEQ,  new Instruction<RRI>(OpCode.BEQ,  BEQ)},
+                {OpCode.BLT,  new Instruction<RRI>(OpCode.BLT,  BLT)},
+                {OpCode.BGT,  new Instruction<RRI>(OpCode.BGT,  BGT)},
+                {OpCode.JALR, new Instruction<RRI>(OpCode.JALR, JALR)}
+            };
+            Registers[8] = (uint)(_memory.GetUpperBound(0) -3);
         }
 
-        private static void Exec<T>(Instruction instruction, Action<T> action) where T : Instruction 
-            => action((T)instruction);
-
-        private void Execute()
+        private void ADD(RRR i)
         {
-            _register[0] = 0;
-            switch(CurrentInstruction?.OpCode)
-            {
-                case 0: //ADD
-                      Exec<RrrInstruction>(CurrentInstruction, i =>{
-                        _register[i.RegA] = (ushort)(_register[i.RegB] + _register[i.RegC]); 
-                        _pc += 1;
-                    });
-                    break;
-                case 1: //ADDI
-                    Exec<RriInstruction>(CurrentInstruction, i => {
-                        _register[i.RegA] = (ushort)(_register[i.RegB] + i.Immediate);
-                        _pc += 1;
-                    });
-                    break;
-                case 2: //NAND
-                    Exec<RrrInstruction>(CurrentInstruction, i => {
-                        var result = _register[i.RegB].ToBits().Nand(_register[i.RegC].ToBits());
-                        _register[i.RegA] = result.GetBitsAs<ushort>(0, 16);
-                        _pc += 1;
-                    });
-                    break;
-                case 3: //LUI
-                    Exec<RiInstruction>(CurrentInstruction, i => {
-                        var b = i.Immediate.ToBits();
-                        b.Reverse();
-                        _register[i.RegA] = b.GetBitsAs<ushort>(6,16);
-                        _pc++;
-                    });
-                    break;
-                case 4: //SW
-                    Exec<RriInstruction>(CurrentInstruction, i => {
-                        Memory[i.RegB + i.Immediate] = _register[i.RegA]; 
-                        _pc += 1;
-                    });
-                    break;
-                case 5: //LW
-                    Exec<RriInstruction>(CurrentInstruction, i => {
-                        _register[i.RegA] = Memory[i.RegB + i.Immediate]; 
-                        _pc++;
-                    });
-                    break;
-                case 6: //BEQ
-                    Exec<RriInstruction>(CurrentInstruction, i =>
-                    {
-                        _pc = _register[i.RegA] == _register[i.RegB]
-                            ? (ushort) i.Immediate
-                            : (ushort) (_pc + 1);
-                    });
-                    break;
-                case 7: //JALR
-                    Exec<RriInstruction>(CurrentInstruction, i=> { 
-                        if (i.Immediate != 0) {
-                            throw new InvalidOperationException("HALT");
-                        }
-                        _register[i.RegA] = (ushort)(_pc + 1);
-                        _pc = _register[i.RegB];
-                     });
-                    break;
-                default:
-                    throw new InvalidOperationException($"Op code {CurrentInstruction?.OpCode} not known.)");
+            _register[i.RegA] = _register[i.RegB] + _register[i.RegC];
+        }
+
+        private void ADDI(RRI i)
+        {
+             _register[i.RegA] = (uint)(_register[i.RegB] + i.Immediate);
+        }
+
+        private void NAND(RRR i)
+        {
+            _register[i.RegA] = ~(_register[i.RegB] & _register[i.RegC]);
+        }
+
+        private void LUI(RI i)
+        {
+            _register[i.RegA] = i.Immediate;
+        }
+
+        private void LW(RRI i)
+        {
+             var start = (int)_register[i.RegB] + i.Immediate;
+            var data = _memory[start..(start + 4)].ToArray();
+            _register[i.RegA] = ValueConvertor.ToUInt(data);
+        }
+
+        private void SW(RRI i)
+        {
+            var value = _register[i.RegA];
+            var data = ValueConvertor.ToBytes(value);
+            var address = _register[i.RegB] + i.Immediate;
+            data.CopyTo(_memory, address);
+        }
+
+        private void JALR(RRI i)
+        {
+            if (i.Immediate != 0) {
+                SysCalls[(SysCallCodes)i.Immediate]();
             }
-         }
+            else {
+                _register[i.RegA] = (uint)(_pc+4);
+                _pc = (ushort)(_register[i.RegB] - 4);
+            }
+        }
 
-        public void Load(ushort[] data) => data.CopyTo(Memory, 0);
+        private void BEQ(RRI i)
+        {
+            _pc = _register[i.RegA] == _register[i.RegB] ? (i.Immediate - 4) : _pc;
+        }
 
+        private void BGT(RRI i)
+        {
+            var a = ValueConvertor.ToInt(_register[i.RegA]);
+            var b = ValueConvertor.ToInt(_register[i.RegB]);
+
+            if( a >= b) {
+                _pc = i.Immediate -4;
+            }
+        }
+
+        private void BLT(RRI i)
+        {
+            var a = ValueConvertor.ToInt(_register[i.RegA]);
+            var b = ValueConvertor.ToInt(_register[i.RegB]);
+
+            if( a <= b) {
+                _pc = i.Immediate-4;
+            }
+        }
+
+        public int ProgramCounter => _pc;
+
+        public uint[] Registers => _register.AsArray();
+
+        public byte[] Memory => _memory;
+
+        public Instruction? CurrentInstruction => _currentInstruction?.Operation;
+
+        private void Fetch(int address) {
+            BitArray instructionData = new BitArray( _memory[_pc..(_pc+4)]);
+            var opCode = _memory[_pc];
+            var operands = _memory[(_pc + 1)..(_pc + 4)];
+            _currentInstruction = _operations[(OpCode)opCode];
+            _currentInstruction.Decode(operands);
+        }
+        
+        public void Load(byte[] data) => data.CopyTo(Memory, 0);
 
         public int Run()
         {
             while (true){
-                try {
-                    Decode(_pc);
+                try { 
+                    Fetch(ProgramCounter);
                     _postDecode?.Invoke();
-                    Execute();
+                     _currentInstruction?.Execute();
+                    _pc += 4;
                     _postExecution?.Invoke();
-                }
+                  }
                 catch(Exception ex) { 
                     if(ex.Message == "HALT") {
                         return 0;

@@ -1,0 +1,20 @@
+MAIN:	LUI 1 101		#12	Load data from Memory[32] into reg[1] 
+		LUI 2 102		#16	Set reg[3] to decrement amount		
+
+		PUSH 1				#20,24
+		PUSH 2				#28,32
+		CALL SUB			#40
+		HALT				#60		HALT
+		FILL 0
+		FILL 0
+		FILL 0
+		FILL 0
+		FILL 0
+		FILL 0
+
+SUB:	POP 7				#64 68
+		POP 3 				#64 68
+		POP 4 				#72 76
+		ADD 1 3 4			#88		Add reg[2] to reg[1] and store in reg[1]
+		PUSH 7
+		RETURN 1			#92 96

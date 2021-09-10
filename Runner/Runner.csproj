@@ -6,6 +6,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="subs.txt">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
     <None Update="countdown.txt">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>

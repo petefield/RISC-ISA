@@ -10,7 +10,7 @@ using VirtualMachineBase.BinaryUtilities;
 namespace Risc16 {
     public class VirtualMachine : IVirtualMachine 
     {
-        private int _pc;
+        private uint _pc;
         private readonly byte[] _memory = new byte[256];
         private readonly Registers _register = new Registers(9);
         private readonly Action? _postDecode;
@@ -40,7 +40,9 @@ namespace Risc16 {
             BEQ,     //6
             JALR,    //7
             BLT,     //8
-            BGT      //9
+            BGT,      //9
+            CALL,
+            RETURN
         }
 
         public VirtualMachine(Action? postDecode, Action? postExecution) {
@@ -57,7 +59,10 @@ namespace Risc16 {
                 {OpCode.BEQ,  new Instruction<RRI>(OpCode.BEQ,  BEQ)},
                 {OpCode.BLT,  new Instruction<RRI>(OpCode.BLT,  BLT)},
                 {OpCode.BGT,  new Instruction<RRI>(OpCode.BGT,  BGT)},
-                {OpCode.JALR, new Instruction<RRI>(OpCode.JALR, JALR)}
+                {OpCode.JALR, new Instruction<RRI>(OpCode.JALR, JALR)},
+                {OpCode.CALL,  new Instruction<RI>(OpCode.JALR, CALL)},
+                {OpCode.RETURN,  new Instruction<RI>(OpCode.JALR, RTS)},
+
             };
             Registers[8] = (uint)(_memory.GetUpperBound(0) -3);
         }
@@ -79,7 +84,7 @@ namespace Risc16 {
 
         private void LUI(RI i)
         {
-            _register[i.RegA] = i.Immediate;
+               _register[i.RegA] = i.Immediate;
         }
 
         private void LW(RRI i)
@@ -108,9 +113,29 @@ namespace Risc16 {
             }
         }
 
+        private void CALL(RI i)
+        {
+             var data = ValueConvertor.ToBytes(_pc);
+            data.CopyTo(_memory, _register[8]);
+            _register[8] -=4;
+            _pc = (uint)(i.Immediate - 4);
+        }
+
+        private void RTS(RI i)
+        {
+            _register[8] +=4;
+
+               var data = _memory[(int)_register[8]..(int)(_register[8] + 4)].ToArray();
+             _pc = ValueConvertor.ToUInt( data);
+
+            _memory[_register[8]] =0;
+
+             ValueConvertor.ToBytes( _register[i.RegA] + i.Immediate).CopyTo(_memory, _register[8]);
+        }
+
         private void BEQ(RRI i)
         {
-            _pc = _register[i.RegA] == _register[i.RegB] ? (i.Immediate - 4) : _pc;
+            _pc = _register[i.RegA] == _register[i.RegB] ? (uint)(i.Immediate - 4) : _pc;
         }
 
         private void BGT(RRI i)
@@ -119,7 +144,7 @@ namespace Risc16 {
             var b = ValueConvertor.ToInt(_register[i.RegB]);
 
             if( a >= b) {
-                _pc = i.Immediate -4;
+                _pc = (uint)(i.Immediate -4);
             }
         }
 
@@ -129,11 +154,11 @@ namespace Risc16 {
             var b = ValueConvertor.ToInt(_register[i.RegB]);
 
             if( a <= b) {
-                _pc = i.Immediate-4;
+                _pc = (uint)(i.Immediate-4);
             }
         }
 
-        public int ProgramCounter => _pc;
+        public int ProgramCounter => (int)_pc;
 
         public uint[] Registers => _register.AsArray();
 
@@ -142,9 +167,9 @@ namespace Risc16 {
         public Instruction? CurrentInstruction => _currentInstruction?.Operation;
 
         private void Fetch(int address) {
-            BitArray instructionData = new BitArray( _memory[_pc..(_pc+4)]);
-            var opCode = _memory[_pc];
-            var operands = _memory[(_pc + 1)..(_pc + 4)];
+            BitArray instructionData = new BitArray( _memory[(int)_pc..((int)_pc+4)]);
+            var opCode = _memory[(int)_pc];
+            var operands = _memory[((int)_pc + 1)..((int)_pc + 4)];
             _currentInstruction = _operations[(OpCode)opCode];
             _currentInstruction.Decode(operands);
         }
@@ -159,8 +184,8 @@ namespace Risc16 {
                     _postDecode?.Invoke();
                      _currentInstruction?.Execute();
                     _pc += 4;
-                    _postExecution?.Invoke();
-                  }
+                     _postExecution?.Invoke();
+                   }
                 catch(Exception ex) { 
                     if(ex.Message == "HALT") {
                         return 0;

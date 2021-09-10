@@ -14,7 +14,7 @@ namespace VirtualMachineBase {
             Console.SetWindowPosition(0,0);
             Console.SetWindowSize(Console.LargestWindowWidth,Console.LargestWindowHeight);
             _vm = vm;
-            _lastMemory = new Byte[_vm.Memory.GetUpperBound(0)];
+            _lastMemory = new Byte[_vm.Memory.Length];
 
         }
 
@@ -32,6 +32,9 @@ namespace VirtualMachineBase {
             }
         }
 
+        private bool _firstRender =true;
+
+
         private void Output_memory_words(int col, int row)
         {
             Console.SetCursorPosition(col, row);
@@ -47,9 +50,22 @@ namespace VirtualMachineBase {
                     Console.BackgroundColor = ConsoleColor.Green;
                 }
 
-                var word = _vm.Memory[address..(address + 4)];
+                if (address == _vm.Registers[8]) {
+                    Console.BackgroundColor = ConsoleColor.Blue;
+                }
 
-                Write(col, rowt++, $"[{address:000}] {word.Render()} {ValueConvertor.ToUInt(word):0000}");
+                var word = _vm.Memory[address..(address + 4)];
+                var lastword = _lastMemory[address..(address + 4)];
+
+
+                rowt++;
+
+                for(int i = 0; i < word.GetUpperBound(0) ; i++) {
+                  //  if( (word[i] != lastword[i])) {
+                        Write(col, rowt, $"[{address:000}] {word.Render()} {ValueConvertor.ToUInt(word):0000}");
+                        continue;
+                //    }
+                }
 
                 if (address == 128)
                 {
@@ -60,13 +76,14 @@ namespace VirtualMachineBase {
                 Console.ForegroundColor = fore;
                 Console.BackgroundColor = bck;
             }
+            _vm.Memory.CopyTo(_lastMemory,0);
+            _firstRender = false;
 
-            _lastMemory = _vm.Memory.ToArray();
         }
 
 
         public void Render() {
-            Write(0, 0, $"PC   : {_vm.ProgramCounter}");
+            Write(0, 0, $"PC   : {_vm.ProgramCounter:0000}");
             Write(0, 1, $"{_vm.CurrentInstruction}");
             if (_vm.CurrentInstruction != null)
             {

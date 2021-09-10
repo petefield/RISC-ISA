@@ -20,6 +20,8 @@ namespace Risc16.Assembler
             JALR,    //7
             BLT,     //8
             BGT,     //9
+            CALL,
+            RETURN
         }
 
         private static readonly List<string> MachineCode = new List<string>();
@@ -82,17 +84,21 @@ namespace Risc16.Assembler
                     return new[]{ Createabs(fields[0]) } ;
                 case "JMP":
                     return new[]{ CreateRriInstructiondeffered(OpCodes.BEQ, "0","0", fields[0]) };
+                case "CALL":
+                    return new[]{ CreateRiInstructiondeffered(OpCodes.CALL,  "0",fields[0])};
+                case "RETURN":
+                    return new[]{ CreateRriInstructiondeffered(OpCodes.RETURN, "0","0", fields[0]) };
                 case "PUSH":
-                    return new[]
-                    {
+                    return new[] {
                         CreateRriInstructiondeffered(OpCodes.SW, fields[0], "8", "0"),      //store value from specified r[fields[0]] into memory[r[7]]
                         CreateRriInstructiondeffered(OpCodes.ADDI, "8", "8", "-4"),          //Add 1 to StackPointer
                     };
                 case "POP":
-                    return new[]
-                    {   
+                    return new[] {
                         CreateRriInstructiondeffered(OpCodes.ADDI, "8", "8", "4"),          //Add 1 to StackPointer
-                        CreateRriInstructiondeffered(OpCodes.LW, fields[0], "8", "0"),      //store value from specified r[fields[0]] into memory[r[7]]
+                        CreateRriInstructiondeffered(OpCodes.LW, fields[0], "8","0"),      //store value from specified r[fields[0]] into memory[r[7]]
+                        CreateRriInstructiondeffered(OpCodes.SW, "0", "8","0"),      //store value from specified r[fields[0]] into memory[r[7]]
+
                     };
                 default:
                     throw new InvalidOperationException();

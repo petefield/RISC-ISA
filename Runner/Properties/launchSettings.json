@@ -2,7 +2,7 @@
   "profiles": {
     "Runner": {
       "commandName": "Project",
-      "commandLineArgs": "countdown.txt --debug"
+      "commandLineArgs": "subs.txt --debug"
     }
   }
 }

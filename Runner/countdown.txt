@@ -8,9 +8,7 @@ PROG:	LW 1 0 START		#12	Load data from Memory[32] into reg[1]
 
 LOOP:	PUSH 1				#20,24
 		PUSH 2				#28,32
-
-		LUI 6 SUB			#36
-		JALR 5 6 0			#40
+		CALL SUB			#40
 		POP 1				#44,48
 		
 		BLT 1 0 HALT		#52		If reg[3] (result) <= reg[0] goto 9 (PC + 1 + imm)
